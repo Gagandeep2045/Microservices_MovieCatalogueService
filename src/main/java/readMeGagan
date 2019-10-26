@@ -1,0 +1,92 @@
+1. In order to intercept request sent and response receive by invoking rest template , we have defined an interceptor
+MovieCatalogueInterceptor which implements ClientHttpRequestInterceptor.
+
+ClientHttpRequestInterceptor interface is a functional interface with only one method 
+public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
+
+Here we have logged request details like request method , request body , response hedaers etc.
+
+Most Imp-> After creating a interceptor , we need to instantiate it and tag it to restTemplate whose request/response it will intercept
+by invoking restTempalte.setInterceptor(List<ClientHttpRequestInterceptor> )
+
+here in our code
+r.setInterceptors(Arrays.asList(new MovieCatalogueInterceptor()));
+
+2.
+ Map<String, String> m = Stream.of("user").collect(Collectors.toMap(a -> a, a
+		// -> "gagan"));
+Above will create Map with entry(key=user, value=gagan)
+
+3.Multiple request headers, query/request param can be sent through restTemplate as MutiValueMap. MultiValueMap is an interface
+whose implementation class is LinkedMultiValueMap.
+
+The headers can be provided as HttpEntity(T body, MultiValueMap<String,String> headers)
+and then RestTemplate method
+<T> ResponseEntity<T> exchange(String url, HttpMethod method, HttpEntity<?> requestEntity, Class<T> responseType, Map<String,?> uriVariables)
+
+Similarly queryParam/requestParam can be passed as MultiValueMap to URI
+
+MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
+		multiValueMap.add("user", userName);
+		String url = UriComponentsBuilder.fromHttpUrl(ratingDataServiceURL).queryParams(multiValueMap).toUriString()
+		
+		This url will have query string i.e ww.abc.com?k1=v1&k2=v2...
+		where k1,v1 ; k2,v2 .. are entries in MultiValueMap supplied to URIComponentBuilder
+		
+This url as string can be passed to any method of resttemplate
+
+4.In 
+https://www.baeldung.com/spring-rest-template-list
+<T> ResponseEntity<T>	exchange(String url, HttpMethod method, HttpEntity<?> requestEntity, Class<T> responseType, Map<String,?> uriVariables)
+
+The response object is encapsulated by Class<T> responseType but lets suppose here it is Collection<GenericType>
+lets say List<MovieRating> then you will have to instantiate annonymous inner class as
+new ParameterizedTypeReference<List<MovieRating>>() {
+				} 
+i.e new ParameterizedTypeReference<T>() {
+				} 
+where T is Collection<Q>
+
+and hence go as
+ResponseEntity<List<Employee>> response = restTemplate.exchange(
+  "http://localhost:8080/employees/",
+  HttpMethod.GET,
+  null,
+  new ParameterizedTypeReference<List<Employee>>(){});				
+
+ 5. Spring boot comes with a client already in classpath-RestTemplate
+ 
+ 6.
+ For using WebClient as RestTemplate will be deprecated we need to add dependency 
+ 
+ <dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-webflux</artifactId>
+</dependency>
+		
+and then WebClient webClient=WebClient.create()
+ 
+ Spring WebFlux is a fully non-blocking reactive alternative to Spring MVC.
+ List<A>,Collection<A>,Set<A> etc--> Flux<A>
+ Single Value -> Mono
+ https://stackoverflow.com/questions/56029123/spring-webclient-customised-response-callback-on-http-error-status
+ https://dzone.com/articles/doing-stuff-with-spring-webflux
+ https://www.e4developer.com/2018/05/31/webflux-in-practice-asynchronous-service-with-webclient/
+ 
+ 7.Why hardcoded URLs are bad?
+ Dynamic URLs in cloud
+ Multiple environments, multiple url
+ Multiple instances with different urls while loadbalancing
+ 
+ 8. Types of service Discovery:
+ Client Side Service Discovery-> Disc Server returns address/URL of service asked by client
+ and then client directly hits that service by invoking the provided URL/address.
+ 
+ Server Side Service Discovery-> Disc. Server acts as intermediate b/w service and client 
+ and routes requests from client to service. This is efficient as less hops.
+ Spring cloud uses client side service discovery
+ 
+ 9. Steps of Service Discovery through Netflix provided Eureka technology
+a)Start up Eureka Server
+b)Have microservices register(publish) using Eureka client
+c)Have microservices locate(consume) using Eureka client
