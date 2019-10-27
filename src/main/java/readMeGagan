@@ -92,3 +92,17 @@ b)Have microservices register(publish) using Eureka client
 c)Have microservices locate(consume) using Eureka client
 
 Thereafter read 10 readMeGagan from Microservices_EurekaServer project
+
+13. Consuming services with eureka client name
+You can now call the service by just providing the eureka client name and
+not give complete URL as we have url as defined in application.proprties file i.e
+ratingDataServiceEurekaClientNamedUrl=http://MOVIE-RATING-DATA-SERVICE/rating
+movieInfoServiceEurekaClientNamedUrl=http://MOVIE-INFO-SERVICE/movies/info
+
+The RestTemplate bean by which we are invoking these services should be annotated
+with @LoadBalanced
+
+The restTemplate will take care of finding service url. It will provide abstraction
+while invoking service.
+by calling eureka server and then invoking the service with full service url.
+You dont have to do anything.

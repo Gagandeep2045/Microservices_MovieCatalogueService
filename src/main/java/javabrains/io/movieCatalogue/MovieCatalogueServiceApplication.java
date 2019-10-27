@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
@@ -17,6 +18,7 @@ public class MovieCatalogueServiceApplication {
 	}
 
 	@Bean
+	@LoadBalanced
 	RestTemplate getRestTemplate() {
 		RestTemplate r = new RestTemplate();
 		r.setInterceptors(Arrays.asList(new MovieCatalogueInterceptor()));

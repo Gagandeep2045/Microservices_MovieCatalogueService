@@ -37,10 +37,12 @@ public class MovieCatalogueService {
 	@Autowired
 	private WebClient webClient;
 
-	@Value("${ratingDataServiceURL}")
+	// @Value("${ratingDataServiceURL}")
+	@Value("${ratingDataServiceEurekaClientNamedUrl}")
 	private String ratingDataServiceURL;
 
-	@Value("${movieInfoServiceURL}")
+	// @Value("${movieInfoServiceURL}")
+	@Value("${movieInfoServiceEurekaClientNamedUrl}")
 	private String movieInfoServiceURL;
 
 	public MovieCatalogue getMovieCatalogue(String userName) {
@@ -63,6 +65,7 @@ public class MovieCatalogueService {
 			String movieId = rating.getMovieId();
 			String urlWithQueryString = UriComponentsBuilder.fromHttpUrl(movieInfoServiceURL)
 					.queryParam("movieId", movieId).build().toUriString();
+			System.out.println("URL with query String " + urlWithQueryString);
 			Movie movie = restTemplate.exchange(urlWithQueryString, HttpMethod.GET, null, Movie.class, new Object())
 					.getBody();
 			javabrains.io.movieCatalogue.model.Movie mov = new javabrains.io.movieCatalogue.model.Movie();
