@@ -90,3 +90,5 @@ and then WebClient webClient=WebClient.create()
 a)Start up Eureka Server
 b)Have microservices register(publish) using Eureka client
 c)Have microservices locate(consume) using Eureka client
+
+Thereafter read 10 readMeGagan from Microservices_EurekaServer project
