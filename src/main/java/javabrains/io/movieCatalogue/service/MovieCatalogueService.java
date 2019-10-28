@@ -1,19 +1,17 @@
 package javabrains.io.movieCatalogue.service;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -21,8 +19,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import javabrains.io.movieCatalogue.interceptor.MovieCatalogueInterceptor;
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.shared.Application;
 import javabrains.io.movieCatalogue.model.MovieCatalogue;
 import javabrains.io.movieCatalogue.movieInfo.vo.Movie;
 import javabrains.io.movieCatalogue.movieRating.vo.MovieRating;
@@ -36,6 +34,13 @@ public class MovieCatalogueService {
 
 	@Autowired
 	private WebClient webClient;
+
+	@Autowired
+	@Lazy
+	private com.netflix.discovery.DiscoveryClient discoveryClient_netflix;
+
+	@Autowired
+	private org.springframework.cloud.client.discovery.DiscoveryClient discoveryClient_springCloud;
 
 	// @Value("${ratingDataServiceURL}")
 	@Value("${ratingDataServiceEurekaClientNamedUrl}")
@@ -85,6 +90,23 @@ public class MovieCatalogueService {
 		URI uri = UriComponentsBuilder.fromHttpUrl(ratingDataServiceURL).queryParams(multiValueMap).build().toUri();
 		Flux<MovieRating> a = webClient.get().uri(uri).retrieve().bodyToFlux(MovieRating.class);
 		return a;
+	}
+
+	public Map<String, List<InstanceInfo>> getServicesInstanceMap1() {
+		List<Application> applicationList = discoveryClient_netflix.getApplications().getRegisteredApplications();
+		Map<String, List<InstanceInfo>> applicationMap = applicationList.stream()
+				.collect(Collectors.toMap(a -> a.getName(), a -> a.getInstances()));
+		return applicationMap;
+	}
+
+	public Map<String, List<ServiceInstance>> getServicesInstanceMap() {
+		List<String> services = discoveryClient_springCloud.getServices();
+		discoveryClient_springCloud.getInstances("MOVIE-INFO-SERVICE").forEach(serviceInstance -> {
+			System.out.println(serviceInstance.getUri().toString());
+		});
+		Map<String, List<ServiceInstance>> serviceMap = services.stream().collect(Collectors.toMap(Function.identity(),
+				serviceId -> discoveryClient_springCloud.getInstances(serviceId)));
+		return serviceMap;
 	}
 
 	@Bean

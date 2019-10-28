@@ -101,8 +101,61 @@ movieInfoServiceEurekaClientNamedUrl=http://MOVIE-INFO-SERVICE/movies/info
 
 The RestTemplate bean by which we are invoking these services should be annotated
 with @LoadBalanced
+@LoadBalanced=ServiceDiscovery+Load Balancing(at client side)
 
 The restTemplate will take care of finding service url. It will provide abstraction
-while invoking service.
-by calling eureka server and then invoking the service with full service url.
-You dont have to do anything.
+while invoking service by first calling eureka server to get service url of service
+and then invoking the service through obtained service url.You don't have to do anything.
+
+It does load balancing at client side in the sense once Eureka server returns that there are n 
+instances for this service(service id) , the it automatically chooses one instance based on some
+load balancing logic and then hits that instance.
+
+14.Eureka client sends heart beats to service registry/eureka server periodically 
+to register its presence
+
+15.How to fetch all services name at runtime?How to customize load balancing(other than @LoadBalanced)?
+DiscoveryClient https://spring.io/guides/gs/service-registration-and-discovery/
+
+Discovery client is an interface 
+
+In above spring documentation link , com.netflix.discovery.DiscoveryClient of netflix 
+library is used to fetch all services at runtime but this is not working practically 
+as we are getting no such bean  exception on Autowiring it (not even lazy autowiring 
+is working) 
+
+The alternate to it is using org.springframework.cloud.client.discovery.DiscoveryClient
+from spring cloud and getting its instance by autowiring it.
+
+Now you get all services name at runtime by invoking 
+List<String> discoveryClient.getServices() 
+eg will give [MOVIE-CATALOGUE-SERVICE,MOVIE-INFO-SERVICE,MOVIE-RATING-DATA-SERVICE]
+
+You can get url of all instances of a given service by calling
+List<ServiceInstance> discoveryClient.getInstances("MOVIE-INFO-SERVICE")
+
+And  then  extract url by serviceInstance.getUri();
+will return http://HarinderBudhiraja:9999
+
+discoveryClient_springCloud.getInstances("MOVIE-INFO-SERVICE").forEach(serviceInstance -> {
+			System.out.println(serviceInstance.getUri().toString());
+		});
+
+Using above approach you can chose which instance you wish to invoke and customize load balancing
+
+16. We can spawn multiple instances of a service by doing
+
+a)Create jar file by executing
+mvn install 
+b)Run this jar on specified port (i.e override port as defined in application.properties file)
+java  -Dserver.port=9999 -jar movie-info-0.0.1-SNAPSHOT.jar
+
+-Dxxx=xValue is used to provide property in java. It is for any property.
+
+These multiple instances on getting spawned on distinct ports will be displayed on Eureka server
+UI at loaclhost:8761
+
+17. Function.identity() is just a shortcut for defining a function that accepts 
+and returns the same value. We have used in stream api.
+
+18. In case Eureka server goes down, eureka client can get the service url from its cache
