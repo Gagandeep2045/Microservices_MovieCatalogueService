@@ -159,3 +159,15 @@ UI at loaclhost:8761
 and returns the same value. We have used in stream api.
 
 18. In case Eureka server goes down, eureka client can get the service url from its cache
+
+19.If the microservices to be called are slow, you can set timeout by customizing
+timeout by using following parameterized constructor of RestTemplate 
+RestTemplate(ClientHttpRequestFactory requestFactory)
+
+ClientHttpRequestFactory is a functional interface whose implementation class is 
+HttpComponentsClientHttpRequestFactory
+
+You can instantiate HttpComponentsClientHttpRequestFactory and use its method 
+void setConnectTimeout(int timeout)
+
+and set timeout is in milliseconds. A timeout value of 0 specifies an infinite timeout.
