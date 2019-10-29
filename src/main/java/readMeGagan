@@ -171,3 +171,66 @@ You can instantiate HttpComponentsClientHttpRequestFactory and use its method
 void setConnectTimeout(int timeout)
 
 and set timeout is in milliseconds. A timeout value of 0 specifies an infinite timeout.
+
+20.Circuit breaker parameters:
+When does a circuit trp?
+a)Last n request to consider for this decision
+b)How many above requests should fail to trigger circuit break?
+c)What is definition of failure?
+Timeout duration.Mark it as failure after elapse of timeout duration.
+
+When does the circuit un-trip?
+How long after a circuit trip to try again?(Sleep window)
+
+21. What to do when a circuit breaks? 
+Define a fallback which does one of three
+a) Throw an error (Rarely do this )
+b) Return a fallback "default" response to be acted upon (Can do this)
+c) Save previous response in cache and return it from cache (The best option)
+
+22. Why circuit breakers?
+a) Failing Fast
+b) Fallback functionality
+c) Automatic recovery (after sleep window hit again to check if its working fine now)
+
+23. Circuit breaker pattern
+a)When to break circuit? (Circuit breaker parameters)
+b)What to do when circuit breaks? (Fallback)
+c)When to resume request? (Sleep window)
+
+24. Audience Questions (Vid 14)
+If we implement a default fallback response,will the client need to know and distinguish it
+from "normal" response?
+
+Ideally client should not be aware its fallback response.
+
+What if the cached response coming from circuit breaker is outdated?
+Caching not recommended in mission critical applications like banking application but good
+as for facebook feeds. Sensible response which may be incorrect is better than no response.
+
+25)What is Hystrix?
+Open source library originally created by Netflix which
+implements  circuit breaker pattern 
+and accepts configuration parameters and provides fault tolerance and resilience
+and integerates well with spring boot/
+
+There are other fault tolerance patterns like adaptive fault tolerance
+
+26)Adding Hystrix to Spring Boot microservice
+
+a)Add following dependency to pom.xml
+<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+</dependency>
+b)Add @EnableCircuitBreaker to Spring Boot main class
+c)Use @HystrixCommand(fallbackMethod = "getFallbackMovieCatalogue")
+annotation over method in which call to service is made and hence is bound to timeout or give
+error i.e to methods which need circuit breakers.
+
+The fallbackMethod entry of the annotation must be supplied name of the fallback method which
+will be executed in case of timeout/other failures.
+
+The fallback method must have same signature as the method over which @HystrixCommand is
+annotated.Further it should be in the same class.
+d)Configure Hystrix behavior

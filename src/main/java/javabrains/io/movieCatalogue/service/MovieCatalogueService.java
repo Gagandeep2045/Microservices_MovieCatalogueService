@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.shared.Application;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import javabrains.io.movieCatalogue.model.MovieCatalogue;
 import javabrains.io.movieCatalogue.movieInfo.vo.Movie;
 import javabrains.io.movieCatalogue.movieRating.vo.MovieRating;
@@ -50,6 +51,7 @@ public class MovieCatalogueService {
 	@Value("${movieInfoServiceEurekaClientNamedUrl}")
 	private String movieInfoServiceURL;
 
+	@HystrixCommand(fallbackMethod = "getFallbackMovieCatalogue")
 	public MovieCatalogue getMovieCatalogue(String userName) {
 		// Map<String, String> m = Stream.of("user").collect(Collectors.toMap(a -> a, a
 		// -> "gagan"));
@@ -84,6 +86,12 @@ public class MovieCatalogueService {
 		return movieCatalogue;
 	}
 
+	public MovieCatalogue getFallbackMovieCatalogue(String userName) {
+		MovieCatalogue m = new MovieCatalogue();
+		m.setUserName("No response");
+		return m;
+	}
+	
 	public Flux<MovieRating> getMovieCatalogue_WebClient(String userName) {
 		MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
 		multiValueMap.add("user", userName);
