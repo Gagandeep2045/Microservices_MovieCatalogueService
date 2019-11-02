@@ -276,3 +276,21 @@ public MovieCatalogue getMovieCatalogueGranular(String userName) {
 In brief for hystrix to work 
 (method in which we invoke service + fall back method) have to be in same class
 consumer method of service & ( (method in which we invoke service + fall back method) have to be in different class.
+
+28)https://github.com/Netflix/Hystrix/wiki/Configuration
+@HystrixCommand(fallbackMethod = "getMovieInfoFallback",commandProperties={@HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds",value="2000"),
+			@HystrixProperty(name="circuitBreaker.requestVolumeThreshold",value="6"),
+			@HystrixProperty(name="circuitBreaker.errorThresholdPercentage",value="50"),
+			@HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds",value="8000")
+	})
+	
+As discussed in point 20
+.Circuit breaker parameters:
+When does a circuit trp?
+a)Last n request to consider for this decision - circuitBreaker.requestVolumeThreshold
+b)How many above requests should fail to trigger circuit break? - circuitBreaker.errorThresholdPercentage
+c)What is definition of failure? - execution.isolation.thread.timeoutInMilliseconds
+Timeout duration.Mark it as failure after elapse of timeout duration.
+
+When does the circuit un-trip?
+How long after a circuit trip to try again?(Sleep window) - circuitBreaker.sleepWindowInMilliseconds
