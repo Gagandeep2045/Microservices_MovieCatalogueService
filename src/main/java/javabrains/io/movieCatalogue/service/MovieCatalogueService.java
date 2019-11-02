@@ -1,6 +1,7 @@
 package javabrains.io.movieCatalogue.service;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -23,7 +24,9 @@ import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.shared.Application;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import javabrains.io.movieCatalogue.model.MovieCatalogue;
+import javabrains.io.movieCatalogue.movieInfo.util.MovieInfoUtil;
 import javabrains.io.movieCatalogue.movieInfo.vo.Movie;
+import javabrains.io.movieCatalogue.movieRating.util.MovieRatingUtil;
 import javabrains.io.movieCatalogue.movieRating.vo.MovieRating;
 import reactor.core.publisher.Flux;
 
@@ -50,6 +53,12 @@ public class MovieCatalogueService {
 	// @Value("${movieInfoServiceURL}")
 	@Value("${movieInfoServiceEurekaClientNamedUrl}")
 	private String movieInfoServiceURL;
+	
+	@Autowired
+	private MovieRatingUtil movieRatingUtil;
+	
+	@Autowired
+	private MovieInfoUtil movieInfoUtil;
 
 	@HystrixCommand(fallbackMethod = "getFallbackMovieCatalogue")
 	public MovieCatalogue getMovieCatalogue(String userName) {
@@ -98,6 +107,44 @@ public class MovieCatalogueService {
 		URI uri = UriComponentsBuilder.fromHttpUrl(ratingDataServiceURL).queryParams(multiValueMap).build().toUri();
 		Flux<MovieRating> a = webClient.get().uri(uri).retrieve().bodyToFlux(MovieRating.class);
 		return a;
+	}
+	
+	public MovieCatalogue getMovieCatalogueGranular(String userName) {
+		MovieCatalogue mC = new MovieCatalogue();
+		mC.setUserName(userName);
+		List<MovieRating> movieRating =  movieRatingUtil.getMovieRating(userName);
+		List<javabrains.io.movieCatalogue.model.Movie> movies = movieRating.stream().map(rating -> {
+			Movie m = movieInfoUtil.getMovieInfo(rating.getMovieId());
+			return new javabrains.io.movieCatalogue.model.Movie(rating.getMovieId(), m.getMovieName(),
+					rating.getRating(), m.getMovieDescription());
+		}).collect(Collectors.toList());
+		mC.setMovies(movies);
+		return mC;
+	}
+
+	@HystrixCommand(fallbackMethod = "getMovieRatingFallback")
+	public List<MovieRating> getMovieRating(String userName) {
+		String url = UriComponentsBuilder.fromHttpUrl(ratingDataServiceURL).queryParam("user", userName).toUriString();
+		System.out.println("ratingURL:  "+url);
+		return restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<MovieRating>>() {
+
+		}, new Object()).getBody();
+	}
+
+	public List<MovieRating> getMovieRatingFallback(String userName) {
+		return Arrays.asList(new MovieRating("NoMovieFound", 0));
+	}
+
+	@HystrixCommand(fallbackMethod = "getMovieInfoFallback")
+	public Movie getMovieInfo(String movieId) {
+		String url = UriComponentsBuilder.fromHttpUrl(movieInfoServiceURL).queryParam("movieId", movieId).toUriString();
+		System.out.println("movieInfoURL:  "+url);
+		return restTemplate.getForObject(url, Movie.class, new Object[0]);
+	}
+
+	public Movie getMovieInfoFallback(String movieId) {
+		return new Movie(movieId, "Movie Details Not Found", "Movie Description Not Found");
+
 	}
 
 	public Map<String, List<InstanceInfo>> getServicesInstanceMap1() {

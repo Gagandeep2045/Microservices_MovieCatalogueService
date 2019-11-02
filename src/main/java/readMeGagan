@@ -234,3 +234,45 @@ will be executed in case of timeout/other failures.
 The fallback method must have same signature as the method over which @HystrixCommand is
 annotated.Further it should be in the same class.
 d)Configure Hystrix behavior
+
+27) How does Hystrix work?
+ Hystrix wraps the API class over proxy class .On call to
+ API class instance,instance of proxy class returned and inside this proxy class
+ (which extends the class) we have defined circuit breaker code that in case of any error invoke fallback method.
+ 
+ It is due to above implementation of hystrix wherein it involves proxy class , that 
+ 
+ 1) Fall back method doesn't work if:
+ public MovieCatalogue getMovieCatalogueGranular(String userName) {
+		MovieCatalogue mC = new MovieCatalogue();
+		mC.setUserName(userName);
+		List<MovieRating> movieRating =  getMovieRating(userName);
+		List<javabrains.io.movieCatalogue.model.Movie> movies = movieRating.stream().map(rating -> {
+			Movie m = getMovieInfo(rating.getMovieId());
+			return new javabrains.io.movieCatalogue.model.Movie(rating.getMovieId(), m.getMovieName(),
+					rating.getRating(), m.getMovieDescription());
+		}).collect(Collectors.toList());
+		mC.setMovies(movies);
+		return mC;
+	}
+i.e the  methods wherein API calls are being made and the method which invokes this method are in same class
+
+2) Fall back method will work if 
+public MovieCatalogue getMovieCatalogueGranular(String userName) {
+		MovieCatalogue mC = new MovieCatalogue();
+		mC.setUserName(userName);
+		List<MovieRating> movieRating =  movieRatingUtil.getMovieRating(userName);
+		List<javabrains.io.movieCatalogue.model.Movie> movies = movieRating.stream().map(rating -> {
+			Movie m = movieInfoUtil.getMovieInfo(rating.getMovieId());
+			return new javabrains.io.movieCatalogue.model.Movie(rating.getMovieId(), m.getMovieName(),
+					rating.getRating(), m.getMovieDescription());
+		}).collect(Collectors.toList());
+		mC.setMovies(movies);
+		return mC;
+	}
+
+	The methods from where API calls are made and the method which invokes those method are in different classes
+	
+In brief for hystrix to work 
+(method in which we invoke service + fall back method) have to be in same class
+consumer method of service & ( (method in which we invoke service + fall back method) have to be in different class.

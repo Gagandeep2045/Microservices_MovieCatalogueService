@@ -22,7 +22,8 @@ public class MovieCatalogueController {
 	@RequestMapping("/{userName}")
 	MovieCatalogue getCatalogue(@PathVariable()String userName)
 	{
-		return service.getMovieCatalogue(userName);
+		return service.getMovieCatalogueGranular(userName);
+				//getMovieCatalogue(userName);
 	}
 	
 	@RequestMapping("/webclient/{userName}")

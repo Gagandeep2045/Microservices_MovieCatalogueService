@@ -2,6 +2,17 @@ package javabrains.io.movieCatalogue.model;
 
 public class Movie {
 
+	public Movie()
+	{}
+	
+	public Movie(String movieId, String movieName, int rating, String movieDescription) {
+		super();
+		this.movieId = movieId;
+		this.movieName = movieName;
+		this.rating = rating;
+		this.movieDescription = movieDescription;
+	}
+
 	private String movieId;
 
 	private String movieName;
