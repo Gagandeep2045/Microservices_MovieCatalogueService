@@ -333,3 +333,46 @@ The hystrix uses actuator to aggregate health statistics of applications through
 
 The process to set up turbine stream aggregator has been explained in readMeGagan.txt file of  Microservices_HystrixStreamTurbineAggregator
 app.
+
+30)Distributed Log Tracing
+To enable sleuth for distributed log tracing add following dependency 
+<dependency>
+	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-sleuth</artifactId>
+</dependency>
+
+This will automatically enable sleuth and in logs [appName,traceId,spanId,export] will be printed as 
+-03-20 10:15:38.466  INFO [inventory-service,683f8e4370413032,d8abe400c68a9a6b,false] 53685 --- [oryController-3] ...
+Sleuth includes the pattern [appname,traceId,spanId,exportable] in logs from the MDC.
+
+We have added sleuth dependency in all three applications namely calaogue,movie-info & movie-rating.
+
+When call goes to movieCatalogue/userName , it internally calls movieInfo and movieRating. 
+Due to sleuth dependency, the movieCatalogue automatically intercepts the requests and sends traceId and spanId as headers to
+downstream services i.e movieInfo and movieRating. This traceId is constant over call to downstream services and this gets printed in log
+statements and hence can be used to analyse logs on Splunk
+
+See below the traceId,spanId,parentSpanId sent as request headers
+2019-11-03 21:41:03.176  INFO [movie-catalogue-service,a60278740d94a7d6,492da525db99532c,false] 5304 --- [MovieInfoUtil-1] j.i.m.i.MovieCatalogueInterceptor        : Request Headers[Accept:"application/json, application/*+json", Content-Length:"0", X-B3-TraceId:"a60278740d94a7d6", X-B3-SpanId:"492da525db99532c", X-B3-ParentSpanId:"a964db85f8bbe984", X-B3-Sampled:"0"]
+
+traceId-> tracking across microservices
+spanId-> tracking within microservice
+
+https://dzone.com/articles/microservices-part-6-distributed-tracing-with-spri
+https://www.baeldung.com/spring-cloud-sleuth-single-application
+
+
+Application name – This is the name we set in the properties file and can be used to aggregate logs from multiple instances of the same application.
+TraceId – This is an id that is assigned to a single request, job, or action. Something like each unique user initiated web request will have its own traceId.
+SpanId – Tracks a unit of work. Think of a request that consists of multiple steps. 
+Each step could have its own spanId and be tracked individually. 
+By default, any application flow will start with same TraceId and SpanId.
+Above can be validated as below log statement in which traceId=spanId
+
+2019-11-03 21:41:02.140  INFO [movie-catalogue-service,a60278740d94a7d6,a60278740d94a7d6,false] 5304 --- [nio-9092-exec-5] j.i.m.c.MovieCatalogueController         : Delegating request to Service class
+Export – This property is a boolean that indicates whether or not this log was exported to an aggregator like Zipkin.
+
+RID(request id) and SID(session id) in company such that SID is subset of RID
+Similarly SpanId is subset of TraceId.
+A single trace can be composed of multiple spans each correlating to a specific step or section of the request. 
+Traces can be thought of like a single request or job that is triggered in an application

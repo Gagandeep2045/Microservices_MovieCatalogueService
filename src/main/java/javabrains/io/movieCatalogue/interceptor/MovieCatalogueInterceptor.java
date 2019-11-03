@@ -18,6 +18,7 @@ public class MovieCatalogueInterceptor implements ClientHttpRequestInterceptor
 			throws IOException {
 		log.info(request.getURI().toString());
 		log.info(request.getMethod().toString());
+		log.info("Request Headers"+request.getHeaders().toString());
 		String requestBody=new String(body);
 		log.info(requestBody);
 		ClientHttpResponse response=execution.execute(request, body);
