@@ -294,3 +294,42 @@ Timeout duration.Mark it as failure after elapse of timeout duration.
 
 When does the circuit un-trip?
 How long after a circuit trip to try again?(Sleep window) - circuitBreaker.sleepWindowInMilliseconds
+
+https://howtodoinjava.com/spring-cloud/pivotal-cloud-foundry-spring-boot-example/
+
+29) Hystrix dashboard 
+Hystrix dashboard is visualization UI which provides hystrix metrices for every circuit in real time like request rate, circuit breaker 
+status, error %of last 10 seconds,no of hosts reporting from cluster,color coded count of requests falling under following categories:
+fail, timeout, rejected, bad request, short circuited , success
+ 
+We can configure Hystrix dashboard for each application independently or aggregate the hystrix event stream of multiple
+applications into a single external application(called turbine stream aggregator) using turbine.
+The former will be monitoring single host while latter will monitor cluster.
+ 
+To configure hystrix dashboard for each application independently 
+a)Add following dependencies in application's pom.xml:
+
+<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-hystrix-dashboard</artifactId>
+</dependency>
+		
+<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+
+b) Add @EnableHystrixDashboard over sprint boot main class
+
+c)Add following property in application.properties file
+management.endpoints.web.exposure.include=hystrix.stream
+Above property exposes endpoint at actuator/hystrix.stream endpoint where you will get hystrix stream
+
+Now open localhost:port/hystrix
+In the textfield enter localhost:port/actuator/hystrix.stream and click Monitor stream
+
+on localhost:port/actuator/hystrix.stream edpoint you will get live streaming of hystrix stream.
+The hystrix uses actuator to aggregate health statistics of applications through endpoints exposed by actuator. 
+
+The process to set up turbine stream aggregator has been explained in readMeGagan.txt file of  Microservices_HystrixStreamTurbineAggregator
+app.
